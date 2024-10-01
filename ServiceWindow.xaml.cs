@@ -1,18 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace CoffeeMachine
 {
@@ -21,25 +8,25 @@ namespace CoffeeMachine
     /// </summary>
     public partial class ServiceWindow : Window
     {
-        public ServiceWindow()
-        {
-            InitializeComponent();
-            CoffeeMachineResources coffeeRes = new();
-            sliderWater.Maximum = (coffeeRes.WaterMax - CoffeeMachineResources.Water);
-            sliderBeans.Maximum = (coffeeRes.BeansMax - CoffeeMachineResources.Beans);
-            sliderMilk.Maximum = (coffeeRes.MilkMax - CoffeeMachineResources.Milk);
-            sliderCups.Maximum = (coffeeRes.CupsMax - CoffeeMachineResources.Cups);
-            sliderBeans.Minimum = sliderMilk.Minimum = sliderCups.Minimum = sliderWater.Minimum = 0;
-            sliderMilk.Value = sliderBeans.Value = sliderCups.Value = sliderWater.Value = 0;
-        }
+        private CoffeeMachineResources CMResources;
         private int waterValue;
         private int beansValue;
         private int milkValue;
         private int cupsValue;
+        public ServiceWindow()
+        {
+            InitializeComponent();
 
-        
+            CMResources = new();
 
+            sliderWater.Maximum = (CMResources.GetWaterMax - CMResources.Water);
+            sliderBeans.Maximum = (CMResources.GetBeansMax - CMResources.Beans);
+            sliderMilk.Maximum = (CMResources.GetMilkMax - CMResources.Milk);
+            sliderCups.Maximum = (CMResources.GetCupsMax - CMResources.Cups);
 
+            sliderBeans.Minimum = sliderMilk.Minimum = sliderCups.Minimum = sliderWater.Minimum = 0;
+            sliderMilk.Value = sliderBeans.Value = sliderCups.Value = sliderWater.Value = 0;
+        }
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             ((Slider)sender).SelectionEnd = e.NewValue;
@@ -52,10 +39,10 @@ namespace CoffeeMachine
 
         private void Ok_Button(object sender, RoutedEventArgs e)
         {
-            CoffeeMachineResources.Water += waterValue;
-            CoffeeMachineResources.Beans += beansValue;
-            CoffeeMachineResources.Cups += cupsValue;
-            CoffeeMachineResources.Milk += milkValue;
+            CMResources.Water += waterValue;
+            CMResources.Beans += beansValue;
+            CMResources.Cups += cupsValue;
+            CMResources.Milk += milkValue;
 
             this.DialogResult = true;
         }
@@ -65,11 +52,8 @@ namespace CoffeeMachine
         }
         private void Withdrow_Button(object sender, RoutedEventArgs e)
         {
-            CoffeeMachineResources coffee = new()
-            {
-                Money = 0
-            };
-            withdraw_text.Text = coffee.Money.ToString() + " рублей";
+            CMResources.Balance = 0;
+            withdraw_text.Text = CMResources.Balance.ToString() + " рублей";
         }
         private void CheckBox_Checked(object sender, RoutedEventArgs e)
         {

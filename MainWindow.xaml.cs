@@ -1,19 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Threading;
 using System.Diagnostics;
 
 namespace CoffeeMachine
@@ -23,10 +10,19 @@ namespace CoffeeMachine
     /// </summary>
     public partial class MainWindow : Window
     {
+        private CoffeeMachineResources CMResources;
+        private CoffeeMachineClass coffeeMachine;
+        private Coffee americano, latte, cappuccino;
         public MainWindow()
         {
             InitializeComponent();
             Closing += new CancelEventHandler(Closing_Main);
+            CMResources = new();
+            coffeeMachine = new(CMResources);
+
+            americano  = new(250, 0, 16, 1, 4);
+            latte      = new(350, 75, 20, 1, 7);
+            cappuccino = new(200, 100, 12, 1, 6);
         }
         private void Service_Button(object sender, RoutedEventArgs e)
         {
@@ -39,17 +35,18 @@ namespace CoffeeMachine
                 window.Background = this.Background;
             }
             this.Hide();
-            CoffeeMachineResources coffee = new();
-            string str = coffee.Money.ToString()[^1..];
+
+            string str = CMResources.Balance.ToString()[^1..];
             serviceWindow.withdraw_text.Text = str switch
             {
-                "0" or "5" or "6" or "7" or "8" or "9" => coffee.Money + " рублей",
-                "1" => coffee.Money + " рубль",
-                "2" or "3" or "4" => coffee.Money + " рубля",
-                _ => coffee.Money + " рублей" + str,
+                "0" or "5" or "6" or "7" or "8" or "9" => CMResources.Balance + " рублей",
+                "1" => CMResources.Balance + " рубль",
+                "2" or "3" or "4" => CMResources.Balance + " рубля",
+                _ => CMResources.Balance + " рублей" + str,
             };
+
             passwordWindow.ShowDialog();
-            if(passwordWindow.DialogResult == true) serviceWindow.ShowDialog();
+            if (passwordWindow.DialogResult == true) serviceWindow.ShowDialog();
             if (serviceWindow.DialogResult == true)
             {
                 Update_Pictures();
@@ -61,18 +58,18 @@ namespace CoffeeMachine
             Button button = (Button)sender;
 
             BuyCoffeeWindow buyWindow = new();
-            CoffeeMachineResources coffeeRes = new();
             buyWindow.buyInfo.Visibility = Visibility.Visible;
 
             buyWindow.Owner = this;
             buyWindow.Background = this.Background;
 
+            string check;
             if (button.Name == "buttonAmericano")
             {
-                if(coffeeRes.AmericanoBuy() == "")
+                if((check = coffeeMachine.BuyCoffee(americano)) == "")
                 {
                     buyWindow.coffeeInfo.Text = "Американо";
-                    buyWindow.buyInfo.Text = "Стоимость " + coffeeRes.Americano.ToString();
+                    buyWindow.buyInfo.Text = "Стоимость " + americano.GetPrice.ToString();
                     this.Hide();
                     buyWindow.ShowDialog();
                     if (buyWindow.DialogResult == true)
@@ -83,7 +80,7 @@ namespace CoffeeMachine
                 }
                 else
                 {
-                    buyWindow.coffeeInfo.Text = coffeeRes.AmericanoBuy();
+                    buyWindow.coffeeInfo.Text = check;
                     buyWindow.buyInfo.Visibility = Visibility.Hidden;
                     buyWindow.buyButton.IsEnabled = false;
                     buyWindow.ShowDialog();
@@ -92,10 +89,10 @@ namespace CoffeeMachine
             else this.Show();
             if(button.Name == "buttonCappuccino")
             {
-                if (coffeeRes.CappuccinoBuy() == "")
+                if ((check = coffeeMachine.BuyCoffee(cappuccino)) == "")
                 {
                     buyWindow.coffeeInfo.Text = "Капучино";
-                    buyWindow.buyInfo.Text = "Стоимость " + coffeeRes.Cappuccino.ToString();
+                    buyWindow.buyInfo.Text = "Стоимость " + cappuccino.GetPrice.ToString();
                     this.Hide();
                     buyWindow.ShowDialog();
                     if (buyWindow.DialogResult == true)
@@ -106,7 +103,7 @@ namespace CoffeeMachine
                 }
                 else
                 {
-                    buyWindow.coffeeInfo.Text = coffeeRes.CappuccinoBuy();
+                    buyWindow.coffeeInfo.Text = check;
                     buyWindow.buyInfo.Visibility = Visibility.Hidden;
                     buyWindow.buyButton.IsEnabled = false;
                     buyWindow.ShowDialog();
@@ -115,10 +112,10 @@ namespace CoffeeMachine
             else this.Show();
             if (button.Name == "buttonLatte")
             {
-                if (coffeeRes.LatteBuy() == "")
+                if ((check = coffeeMachine.BuyCoffee(latte)) == "")
                 {
                     buyWindow.coffeeInfo.Text = "Латте";
-                    buyWindow.buyInfo.Text = "Стоимость " + coffeeRes.Latte.ToString();
+                    buyWindow.buyInfo.Text = "Стоимость " + latte.GetPrice.ToString();
                     this.Hide();
                     buyWindow.ShowDialog();
                     if (buyWindow.DialogResult == true)
@@ -129,7 +126,7 @@ namespace CoffeeMachine
                 }
                 else
                 {
-                    buyWindow.coffeeInfo.Text = coffeeRes.LatteBuy();
+                    buyWindow.coffeeInfo.Text = check;
                     buyWindow.buyInfo.Visibility = Visibility.Hidden;
                     buyWindow.buyButton.IsEnabled = false;
                     buyWindow.ShowDialog();
@@ -143,8 +140,8 @@ namespace CoffeeMachine
         }
         public void Update_Pictures()
         {
-            CoffeeMachineResources.waterPic = CoffeeMachineResources.Water / 1000;
-            CoffeeMachineResources.beansPic = CoffeeMachineResources.Beans / 200;
+            CoffeeMachineResources.waterPic = CMResources.Water / 1000;
+            CoffeeMachineResources.beansPic = CMResources.Beans / 200;
             for (int i = 0; i < 5; i++)
             {
                 Button beans = (Button)beansGrid.Children[i];
